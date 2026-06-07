@@ -7,11 +7,13 @@
         <link rel="stylesheet" type="text/css" href="css/style.css">
     </head>
     <body>
+        <jsp:include page="header.jsp" />
         <%@ page isErrorPage="true" %>
         <%
             String msg = (String) request.getAttribute("result");
             out.print("<h3>" + msg + "</h3>");
             session.invalidate();
         %>
+        <jsp:include page="footer.jsp" />
     </body>
 </html>
