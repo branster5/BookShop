@@ -9,13 +9,19 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.List;
 import model.Book;
-import utility.AdmitBookStoreDAO;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 
 /**
  * Handles home page / books list
+ *
  * @author Branson
  */
 public class ViewBooksDispatcher implements IDispatcher {
+
+    private static final EntityManagerFactory emf
+            = Persistence.createEntityManagerFactory("BookShopPU");
 
     /**
      * Loads all books from the database and stores them in the session.
@@ -27,15 +33,17 @@ public class ViewBooksDispatcher implements IDispatcher {
     @Override
     public String execute(HttpServletRequest request) throws Exception {
         HttpSession session = request.getSession();
-        AdmitBookStoreDAO dao = new AdmitBookStoreDAO();
+        EntityManager em = emf.createEntityManager();
 
         try {
-            List<Book> books = dao.getAllBooks();
+            List<Book> books = em.createQuery("SELECT b FROM Book b", Book.class).getResultList();
             session.setAttribute("books", books);
             return "/jsp/titles.jsp";
         } catch (Exception ex) {
             request.setAttribute("result", ex.toString());
             return "/jsp/error.jsp";
+        } finally {
+            em.close();
         }
     }
 }

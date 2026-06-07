@@ -2,20 +2,42 @@ package model;
 
 import java.text.DecimalFormat;
 import java.io.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
- * The {@code Book} class represents a book with an ISBN, title, author, and price. It implements the {@code Serializable} interface to allow its instances to
- * be serialized.
+ * The {@code Book} class represents a book with an ISBN, title, author, and
+ * price. It implements the {@code Serializable} interface to allow its
+ * instances to be serialized.
  */
+@Entity
+@Table(name = "TBOOKS", schema = "USER1")
 public class Book implements Serializable {
 
+    @Id
+    @Column(name = "ISBN")
     private String isbn = "";
+
+    @Column(name = "TITLE")
     private String title = "";
+
+    @Column(name = "AUTHOR")
     private String author = "";
+
+    @Column(name = "PRICE")
     private double price = 0.00;
+    
+    /**
+     * Constructs an empty Book object. Required for JPA.
+     */
+    public Book() {
+    }
 
     /**
-     * Constructs a new {@code Book} with the specified ISBN, title, author, and price.
+     * Constructs a new {@code Book} with the specified ISBN, title, author, and
+     * price.
      *
      * @param isbn the ISBN of the book
      * @param title the title of the book
@@ -74,8 +96,7 @@ public class Book implements Serializable {
     public String toString() {
         return "Title: " + title + "  ";
     }
-    
-    
+
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {
