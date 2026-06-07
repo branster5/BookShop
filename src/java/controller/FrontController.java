@@ -8,12 +8,20 @@ import model.Book;
 import model.CartItem;
 import utility.AdmitBookStoreDAO;
 
+import dispatchers.IDispatcher;
+import dispatchers.ViewBooksDispatcher;
+import dispatchers.AddToCartDispatcher;
+import dispatchers.CheckoutDispatcher;
+import dispatchers.ContinueDispatcher;
+import dispatchers.UpdateCartDispatcher;
+import dispatchers.ViewCartDispatcher;
+
 /**
  * FrontController class to handle HTTP requests and responses.
  */
 public class FrontController extends HttpServlet {
 
-    private final HashMap actions = new HashMap();
+    private final HashMap<String, IDispatcher> actions = new HashMap<String, IDispatcher>();
 
     /**
      * Initialize global variables.
@@ -22,7 +30,13 @@ public class FrontController extends HttpServlet {
      */
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        // Additional initialization code can be added here
+        
+        actions.put("view_titles", new ViewBooksDispatcher());
+        actions.put("add_to_cart", new AddToCartDispatcher());
+        actions.put("checkout", new CheckoutDispatcher());
+        actions.put("continue", new ContinueDispatcher());
+        actions.put("update_cart", new UpdateCartDispatcher());
+        actions.put("view_cart", new ViewCartDispatcher());
     }
 
     /**
@@ -50,124 +64,28 @@ public class FrontController extends HttpServlet {
 
         // Get the requested action from the request parameters
         String requestedAction = request.getParameter("action");
-        HttpSession session = request.getSession();
-        AdmitBookStoreDAO dao = new AdmitBookStoreDAO();
-        String nextPage = "";
 
         // If no action is specified, fetch all books and display them
         if (requestedAction == null) {
-            dao = new AdmitBookStoreDAO();
-            List<Book> books = null;
-            nextPage = "/jsp/error.jsp";
-            session = request.getSession();
-            try {
-                books = dao.getAllBooks();
-                session.setAttribute("books", books);
-                nextPage = "/jsp/titles.jsp";
-            } catch (Exception ex) {
-                request.setAttribute("result", ex.getMessage());
-                nextPage = "/jsp/error.jsp";
-            } finally {
-                this.dispatch(request, response, nextPage);
-            }
-        } else if (requestedAction.equals("add_to_cart")) {
-            nextPage = "/jsp/titles.jsp";
+            requestedAction = "view_titles";
+        } 
+        
+        IDispatcher dispatcher = actions.get(requestedAction);
 
-            // Retrieve the cart from the session
-            Map<String, CartItem> cart = (Map<String, CartItem>) session.getAttribute("cart");
-            String[] selectedBooks = request.getParameterValues("add");
-
-            // Check if selectedBooks is null or empty
-            if (selectedBooks == null || selectedBooks.length == 0) {
-                this.dispatch(request, response, nextPage);
-            }
-
-            // If the cart is null, create a new cart and add selected books
-            if (cart == null) {
-                cart = new HashMap();
-
-                for (String isbn : selectedBooks) {
-                    int quantity = Integer.parseInt(request.getParameter(isbn));
-                    Book book = this.getBookFromList(isbn, session);
-                    CartItem item = new CartItem(book);
-                    item.setQuantity(quantity);
-                    cart.put(isbn, item);
-                }
-                session.setAttribute("cart", cart);
-            } else {
-                // If the cart already exists, update the quantities of selected books
-                for (String isbn : selectedBooks) {
-                    int quantity = Integer.parseInt(request.getParameter(isbn));
-                    if (cart.containsKey(isbn)) {
-                        CartItem item = cart.get(isbn);
-                        item.setQuantity(quantity);
-                    } else {
-                        Book book = this.getBookFromList(isbn, session);
-                        CartItem item = new CartItem(book);
-                        item.setQuantity(quantity);
-                        cart.put(isbn, item);
-                    }
-                }
-            }
-
-            this.dispatch(request, response, nextPage);
-        } else if (requestedAction.equals("checkout")) {
-            // Redirect to the checkout page
-            nextPage = "/jsp/checkout.jsp";
-            this.dispatch(request, response, nextPage);
-        } else if (requestedAction.equals("continue")) {
-            // Redirect to the titles page
-            nextPage = "/jsp/titles.jsp";
-            this.dispatch(request, response, nextPage);
-        } else if (requestedAction.equals("update_cart")) {
-            Map<String, CartItem> cart = null;
-            CartItem item = null;
-            String isbn = null;
-            nextPage = "/jsp/cart.jsp";
-            cart = (Map<String, CartItem>) session.getAttribute("cart");
-            String[] booksToRemove = request.getParameterValues("remove");
-            if (booksToRemove != null) {
-                for (String bookToRemove : booksToRemove) {
-                    cart.remove(bookToRemove);
-                }
-            }
-            Set<Map.Entry<String, CartItem>> entries = cart.entrySet();
-            Iterator<Map.Entry<String, CartItem>> iter = entries.iterator();
-            while (iter.hasNext()) {
-                Map.Entry<String, CartItem> entry = iter.next();
-                isbn = entry.getKey();
-                item = entry.getValue();
-                int quantity = Integer.parseInt(request.getParameter(isbn));
-                item.updateQuantity(quantity);
-            }
-            this.dispatch(request, response, nextPage);
-        } else if (requestedAction.equals("view_cart")) {
-            // Redirect to the cart page
-            nextPage = "/jsp/cart.jsp";
-            Map<String, CartItem> cart = (Map<String, CartItem>) session.getAttribute("cart");
-            if (cart == null) {
-                nextPage = "/jsp/titles.jsp";
-            }
-            this.dispatch(request, response, nextPage);
+        if (dispatcher == null) {
+            request.setAttribute("result", "Unknown action: " + requestedAction);
+            this.dispatch(request, response, "/jsp/error.jsp");
+            return;
         }
-    }
 
-    /**
-     * Retrieve a book from the list of books stored in the session.
-     * @param isbn ISBN of the book
-     * @param session HttpSession object
-     * @return Book object
-     */
-    private Book getBookFromList(String isbn, HttpSession session) {
-        List<Book> list = (List<Book>) session.getAttribute("books");
-        Book aBook = null;
-        for (Book book : list) {
-            if (isbn.equals(book.getIsbn())) {
-                aBook = book;
-                break;
-            }
+        try {
+            String nextPage = dispatcher.execute(request);
+            this.dispatch(request, response, nextPage);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            request.setAttribute("result", ex.toString());
+            this.dispatch(request, response, "/jsp/error.jsp");
         }
-        return aBook;
     }
 
     /**
