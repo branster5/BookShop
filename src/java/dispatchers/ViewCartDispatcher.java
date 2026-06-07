@@ -6,6 +6,10 @@
 package dispatchers;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
+import javax.servlet.http.HttpSession;
+import model.CartItem;
+
 
 /**
  * Handles the view cart action for the bookstore application.
@@ -22,6 +26,13 @@ public class ViewCartDispatcher implements IDispatcher {
      */
     @Override
     public String execute(HttpServletRequest request) throws Exception {
+        HttpSession session = request.getSession();
+        Map<String, CartItem> cart = (Map<String, CartItem>) session.getAttribute("cart");
+
+        if (cart == null) {
+            return "/jsp/titles.jsp";
+        }
+
         return "/jsp/cart.jsp";
     }
 }

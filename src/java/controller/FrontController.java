@@ -4,17 +4,12 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 import java.io.*;
 import java.util.*;
-import model.Book;
-import model.CartItem;
-import utility.AdmitBookStoreDAO;
-
 import dispatchers.IDispatcher;
-import dispatchers.ViewBooksDispatcher;
-import dispatchers.AddToCartDispatcher;
-import dispatchers.CheckoutDispatcher;
-import dispatchers.ContinueDispatcher;
-import dispatchers.UpdateCartDispatcher;
-import dispatchers.ViewCartDispatcher;
+import java.io.*;
+import java.util.Enumeration;
+import java.util.HashMap;
+import javax.servlet.*;
+import javax.servlet.http.*;
 
 /**
  * FrontController class to handle HTTP requests and responses.
@@ -25,22 +20,34 @@ public class FrontController extends HttpServlet {
 
     /**
      * Initialize global variables.
+     *
      * @param config ServletConfig object
      * @throws ServletException if an error occurs during initialization
      */
+    @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        
-        actions.put("view_titles", new ViewBooksDispatcher());
-        actions.put("add_to_cart", new AddToCartDispatcher());
-        actions.put("checkout", new CheckoutDispatcher());
-        actions.put("continue", new ContinueDispatcher());
-        actions.put("update_cart", new UpdateCartDispatcher());
-        actions.put("view_cart", new ViewCartDispatcher());
+
+        Enumeration<String> paramNames = config.getInitParameterNames();
+
+        while (paramNames.hasMoreElements()) {
+            String actionName = paramNames.nextElement();
+            String dispatcherClassName = config.getInitParameter(actionName);
+
+            try {
+                Class dispatcherClass = Class.forName(dispatcherClassName);
+                IDispatcher dispatcher = (IDispatcher) dispatcherClass.newInstance();
+
+                actions.put(actionName, dispatcher);
+            } catch (Exception ex) {
+                throw new ServletException("Could not load dispatcher: " + dispatcherClassName, ex);
+            }
+        }
     }
 
     /**
      * Process the HTTP GET request.
+     *
      * @param request HttpServletRequest object
      * @param response HttpServletResponse object
      * @throws ServletException if a servlet-specific error occurs
@@ -54,6 +61,7 @@ public class FrontController extends HttpServlet {
 
     /**
      * Process the HTTP POST request.
+     *
      * @param request HttpServletRequest object
      * @param response HttpServletResponse object
      * @throws ServletException if a servlet-specific error occurs
@@ -68,8 +76,8 @@ public class FrontController extends HttpServlet {
         // If no action is specified, fetch all books and display them
         if (requestedAction == null) {
             requestedAction = "view_titles";
-        } 
-        
+        }
+
         IDispatcher dispatcher = actions.get(requestedAction);
 
         if (dispatcher == null) {
@@ -90,6 +98,7 @@ public class FrontController extends HttpServlet {
 
     /**
      * Forward the request to the specified page.
+     *
      * @param request HttpServletRequest object
      * @param response HttpServletResponse object
      * @param page Page to forward to
@@ -103,10 +112,10 @@ public class FrontController extends HttpServlet {
 
     /**
      * Get Servlet information.
+     *
      * @return Servlet information
      */
     public String getServletInfo() {
         return "controller.FrontController Information";
     }
 }
-

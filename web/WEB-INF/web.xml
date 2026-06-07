@@ -5,14 +5,44 @@
             30
         </session-timeout>
     </session-config>
-     <servlet>
-	<servlet-name>main</servlet-name>
-	<servlet-class>controller.FrontController</servlet-class>
-  </servlet>
+    <servlet>
+        <servlet-name>main</servlet-name>
+        <servlet-class>controller.FrontController</servlet-class>
 
-  <servlet-mapping>
-	<servlet-name>main</servlet-name>
+        <init-param>
+            <param-name>view_titles</param-name>
+            <param-value>dispatchers.ViewBooksDispatcher</param-value>
+        </init-param>
+
+        <init-param>
+            <param-name>add_to_cart</param-name>
+            <param-value>dispatchers.AddToCartDispatcher</param-value>
+        </init-param>
+
+        <init-param>
+            <param-name>checkout</param-name>
+            <param-value>dispatchers.CheckoutDispatcher</param-value>
+        </init-param>
+
+        <init-param>
+            <param-name>continue</param-name>
+            <param-value>dispatchers.ContinueDispatcher</param-value>
+        </init-param>
+
+        <init-param>
+            <param-name>update_cart</param-name>
+            <param-value>dispatchers.UpdateCartDispatcher</param-value>
+        </init-param>
+
+        <init-param>
+            <param-name>view_cart</param-name>
+            <param-value>dispatchers.ViewCartDispatcher</param-value>
+        </init-param>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>main</servlet-name>
         <url-pattern>/books</url-pattern>
-  </servlet-mapping>
+    </servlet-mapping>
 
-    </web-app>
+</web-app>
