@@ -10,6 +10,7 @@
         <%@ page import="model.*" %>
         <%@ page import="java.util.*" %>
         <%@ page import="java.text.*" %>
+        <jsp:include page="header.jsp" />
 
         <h1>Shopping Cart Check Out</h1>
 
@@ -96,5 +97,6 @@
 
             <p><input type="submit" value="Submit"></p>
         </form>
+        <jsp:include page="footer.jsp" />
     </body>
 </html>

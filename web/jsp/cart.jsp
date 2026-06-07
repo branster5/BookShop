@@ -10,7 +10,7 @@
         <%@ page import="model.*" %>
         <%@ page import="java.util.*" %>
         <%@ page import="java.text.*" %>
-
+        <jsp:include page="header.jsp" />
         <h1>The following items are in your shopping cart</h1>
         <form name="form1" method="post" action="./books">
             <input type="hidden" name="action" value="update_cart">
@@ -79,5 +79,6 @@
             <p><a href="./books?action=continue">Continue Shopping</a></p>
             <p><a href="./books?action=checkout">Check Out</a></p>
         </div>
+        <jsp:include page="footer.jsp" />
     </body>
 </html>
